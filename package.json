@@ -27,6 +27,7 @@
     "*.js": "eslint --quiet"
   },
   "dependencies": {
+    "global": "^4.4.0",
     "lodash": "^4.17.5",
     "prop-types": "^15.5.8",
     "react-transition-group": "^2.0.0",

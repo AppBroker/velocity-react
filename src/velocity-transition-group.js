@@ -42,24 +42,26 @@ Inspired by https://gist.github.com/tkafka/0d94c6ec94297bb67091
 /* eslint react/no-find-dom-node: 0 */
 
 var _ = {
-  each: require('lodash/each'),
-  extend: require('lodash/extend'),
-  forEach: require('lodash/forEach'),
-  isEqual: require('lodash/isEqual'),
-  keys: require('lodash/keys'),
-  omit: require('lodash/omit'),
-  map: require('lodash/map'),
+  each: require("lodash/each"),
+  extend: require("lodash/extend"),
+  forEach: require("lodash/forEach"),
+  isEqual: require("lodash/isEqual"),
+  keys: require("lodash/keys"),
+  omit: require("lodash/omit"),
+  map: require("lodash/map")
 };
-var React = require('react');
-var ReactDOM = require('react-dom');
-var PropTypes = require('prop-types');
-var TransitionGroup = require('react-transition-group/TransitionGroup');
-var Transition = require('react-transition-group/Transition').default;
-var Velocity = require('./lib/velocity-animate-shim');
+var React = require("react");
+var ReactDOM = require("react-dom");
+var PropTypes = require("prop-types");
+var TransitionGroup = require("react-transition-group/TransitionGroup");
+var Transition = require("react-transition-group/Transition").default;
+var Velocity = require("./lib/velocity-animate-shim");
+var document = require("global/document");
+var window = require("global/window");
 
 // Shim requestAnimationFrame for browsers that don't support it, in particular IE 9.
 var shimRequestAnimationFrame =
-  typeof window !== 'undefined' &&
+  typeof window !== "undefined" &&
   (window.requestAnimationFrame ||
     window.webkitRequestAnimationFrame ||
     window.mozRequestAnimationFrame ||
@@ -69,10 +71,10 @@ var shimRequestAnimationFrame =
 
 // Fix 'Invalid calling object' error in IE
 shimRequestAnimationFrame =
-  typeof window !== 'undefined' && shimRequestAnimationFrame.bind(window);
+  typeof window !== "undefined" && shimRequestAnimationFrame.bind(window);
 
 var shimCancelAnimationFrame =
-  typeof window !== 'undefined' &&
+  typeof window !== "undefined" &&
   (window.cancelAnimationFrame ||
     window.webkitCancelAnimationFrame ||
     window.mozCancelAnimationFrame ||
@@ -81,32 +83,32 @@ var shimCancelAnimationFrame =
     });
 
 shimCancelAnimationFrame =
-  typeof window !== 'undefined' && shimCancelAnimationFrame.bind(window);
+  typeof window !== "undefined" && shimCancelAnimationFrame.bind(window);
 
 // Internal wrapper for the transitioned elements. Delegates all child lifecycle events to the
 // parent VelocityTransitionGroup so that it can co-ordinate animating all of the elements at once.
 class VelocityTransitionGroupChild extends React.Component {
-  lastState = 'appear';
+  lastState = "appear";
 
   componentWillEnter = (node, appearing) => {
-    this.lastState = appearing ? 'appear' : 'enter';
+    this.lastState = appearing ? "appear" : "enter";
   };
 
   componentWillExit = () => {
-    this.lastState = 'exit';
+    this.lastState = "exit";
   };
 
   // We trigger our transitions out of endListener because that gives us access to the done callback
   // we can use to tell the Transition that the animation has completed.
   endListener = (node, done) => {
     switch (this.lastState) {
-      case 'appear':
+      case "appear":
         this.props.willAppearFunc(node, done);
         break;
-      case 'enter':
+      case "enter":
         this.props.willEnterFunc(node, done);
         break;
-      case 'exit':
+      case "exit":
         this.props.willLeaveFunc(node, done);
         break;
     }
@@ -115,8 +117,8 @@ class VelocityTransitionGroupChild extends React.Component {
   componentWillUnmount() {
     // Clear references from velocity cache.
     Velocity.Utilities.removeData(ReactDOM.findDOMNode(this), [
-      'velocity',
-      'fxqueue',
+      "velocity",
+      "fxqueue"
     ]);
   }
 
@@ -134,7 +136,7 @@ class VelocityTransitionGroupChild extends React.Component {
         addEndListener: this.endListener,
         appear: true,
         onEnter: this.componentWillEnter,
-        onExit: this.componentWillExit,
+        onExit: this.componentWillExit
       },
       this.props.children
     );
@@ -145,7 +147,7 @@ VelocityTransitionGroupChild.propTypes = {
   children: PropTypes.element.isRequired,
   willAppearFunc: PropTypes.func.isRequired,
   willEnterFunc: PropTypes.func.isRequired,
-  willLeaveFunc: PropTypes.func.isRequired,
+  willLeaveFunc: PropTypes.func.isRequired
 };
 
 class VelocityTransitionGroup extends React.Component {
@@ -240,7 +242,7 @@ class VelocityTransitionGroup extends React.Component {
     // it doesn't make a ton of sense.
     this._finishAnimation(node, this.props.leave, {
       begin: undefined,
-      complete: undefined,
+      complete: undefined
     });
 
     // We're not going to start the animation for a tick, so set the node's display to none (or any
@@ -251,7 +253,7 @@ class VelocityTransitionGroup extends React.Component {
 
     this._entering.push({
       node: node,
-      doneFn: doneFn,
+      doneFn: doneFn
     });
 
     this._schedule();
@@ -262,7 +264,7 @@ class VelocityTransitionGroup extends React.Component {
 
     this._leaving.push({
       node: node,
-      doneFn: doneFn,
+      doneFn: doneFn
     });
 
     this._schedule();
@@ -315,20 +317,20 @@ class VelocityTransitionGroup extends React.Component {
   _parseAnimationProp(animationProp) {
     var animation, opts, style;
 
-    if (typeof animationProp === 'string') {
+    if (typeof animationProp === "string") {
       animation = animationProp;
       style = null;
       opts = {};
     } else {
       animation = animationProp != null ? animationProp.animation : null;
       style = animationProp != null ? animationProp.style : null;
-      opts = _.omit(animationProp, 'animation', 'style');
+      opts = _.omit(animationProp, "animation", "style");
     }
 
     return {
       animation: animation,
       style: style,
-      opts: opts,
+      opts: opts
     };
   }
 
@@ -337,8 +339,8 @@ class VelocityTransitionGroup extends React.Component {
       return;
     }
 
-    var nodes = _.map(queue, 'node');
-    var doneFns = _.map(queue, 'doneFn');
+    var nodes = _.map(queue, "node");
+    var doneFns = _.map(queue, "doneFn");
 
     var parsedAnimation = this._parseAnimationProp(animationProp);
     var animation = parsedAnimation.animation;
@@ -355,7 +357,7 @@ class VelocityTransitionGroup extends React.Component {
     // opacity or positioning that Velocity will not necessarily reset.
     if (entering) {
       if (
-        !_.isEqual(this.props.enterShowStyle, { display: '' }) ||
+        !_.isEqual(this.props.enterShowStyle, { display: "" }) ||
         !(/^(fade|slide)/.test(animation) || /In$/.test(animation))
       ) {
         style = _.extend({}, this.props.enterShowStyle, style);
@@ -392,7 +394,7 @@ class VelocityTransitionGroup extends React.Component {
       doneFn();
       doneFn = null;
     } else {
-      Velocity(nodes, 'stop');
+      Velocity(nodes, "stop");
     }
 
     var combinedCompleteFn;
@@ -421,7 +423,7 @@ class VelocityTransitionGroup extends React.Component {
         nodes,
         animation,
         _.extend({}, opts, {
-          complete: combinedCompleteFn,
+          complete: combinedCompleteFn
         })
       );
     });
@@ -446,7 +448,7 @@ class VelocityTransitionGroup extends React.Component {
       // can affect the animation outcome.
 
       Velocity(node, animation, opts);
-      Velocity(node, 'finishAll', true);
+      Velocity(node, "finishAll", true);
     }
   }
 
@@ -463,7 +465,7 @@ class VelocityTransitionGroup extends React.Component {
         key: child.key,
         willAppearFunc: this.childWillAppear,
         willEnterFunc: this.childWillEnter,
-        willLeaveFunc: this.childWillLeave,
+        willLeaveFunc: this.childWillLeave
       },
       child
     );
@@ -478,7 +480,7 @@ VelocityTransitionGroup.propTypes = {
   leave: PropTypes.any,
   children: PropTypes.any,
   enterHideStyle: PropTypes.object,
-  enterShowStyle: PropTypes.object,
+  enterShowStyle: PropTypes.object
 };
 
 VelocityTransitionGroup.defaultProps = {
@@ -486,11 +488,11 @@ VelocityTransitionGroup.defaultProps = {
   enter: null,
   leave: null,
   enterHideStyle: {
-    display: 'none',
+    display: "none"
   },
   enterShowStyle: {
-    display: '',
-  },
+    display: ""
+  }
 };
 
 module.exports = VelocityTransitionGroup;

@@ -8,6 +8,7 @@
 // https://github.com/twitter-fabric/velocity-react/issues/119
 // but there may have been different loading issues in that case,
 // not a global incompatibility with jsdom.
+var window = require('global/window');
 if (
   typeof window === 'undefined' ||
   typeof navigator === 'undefined' ||
